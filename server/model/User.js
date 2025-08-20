@@ -1,24 +1,23 @@
-import mongoose, { mongo } from "mongoose"
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-    _id: { typeof: String, required: true },
-    email: { typeof: String, required: true },
+  _id: { type: String, required: true },
+  email: { type: String, required: true },
 
-    full_name: { typeof: String, required: true },
-    username: { typeof: String, required: true },
+  full_name: { type: String, required: true },
+  username: { type: String, required: true },
 
-    bio: { typeof: String, default: "Hey there I am using PingUp." },
-    profile_picture: { typeof: String, default: "" },
-    cover_photo: { typeof: String, default: "" },
-    location: { typeof: String, default: "" },
+  bio: { type: String, default: "Hey there I am using PingUp." },
+  profile_picture: { type: String, default: "" },
+  cover_photo: { type: String, default: "" },
+  location: { type: String, default: "" },
 
-    followers: [{ typeof: String, ref: "User" }],
-    following: [{ typeof: String, ref: "User" }],
-    connections: [{ typeof: String, ref: "User" }],
+  followers: [{ type: String, ref: "User" }],
+  following: [{ type: String, ref: "User" }],
+  connections: [{ type: String, ref: "User" }],
+},
+{ timestamps: true, minimize: false });
 
-},{timestamps:true , minimize:false})
+const User = mongoose.model("User", userSchema);
 
-
-const user = mongoose.model("User",userSchema)
-
-export default user
+export default User;
