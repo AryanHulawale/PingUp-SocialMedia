@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer"
 
 // Create a test account or replace with real credentials.
 const transporter = nodemailer.createTransport({
