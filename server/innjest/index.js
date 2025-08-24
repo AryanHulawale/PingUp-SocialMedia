@@ -2,6 +2,8 @@ import { Inngest } from "inngest";
 import User from "../model/User.js";
 import Connection from "../model/Connection.js";
 import sendEmail from "../config/nodeMailer.js";
+import Story from "../model/Story.js";
+import Message from "../model/Message.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "pingup-app" });
@@ -117,8 +119,56 @@ const sendNewConnectionRequestRemainder = inngest.createFunction(
 
         })
 
-        return {message : "Remainder Sent."}
+        return { message: "Remainder Sent." }
 
+    }
+)
+
+const deleteStory = inngest.createFunction(
+    { id: "delete-story" },
+    { event: "app/story.delete" },
+    async ({ event, step }) => {
+        const { storyId } = event.data
+        last24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        await step.sleepUntil("wait-for-24-hours", last24Hours)
+        await step.run("story-delete", async () => {
+            await Story.findByIdAndDelete(storyId)
+            return { message: "Story deleted" }
+        })
+    }
+)
+
+const sendNotificationOfUnseenMessages = inngest.createFunction(
+    { id: "send-unseen-message-notification" },
+    { cron: "CRON_TZ=Asia/Kolkata 0 9 * * *" },
+    async ({ step }) => {
+        const messages = await Message.find({ seen: false }).populate("to_user_id")
+
+        const unseenCount = {}
+
+        messages.map((message) => {
+            unseenCount[message.to_user_id._id] = (unseenCount[message.to_user_id._id] || 0) + 1;
+        })
+
+        for (const userId in unseenCount) {
+            const user = await User.findById(userId)
+            const subject = `You have ${unseenCount[userId]} unseen messages`
+            const body = `<div style="font-family: Arial, Helvetica, sans-serif; padding: 20px ">
+                            <h2>Hi ${user.full_name},</h2>
+                            <p>You have ${unseenCount[userId]} unseen messages</p>
+                            <p>Click <a href="${process.env.FRONTEND_URL}/messages" style="color: #1753f5dd;">here</a> to accept or reject the request</p>
+                            <br>
+                            <p>Thanks,<br/>PingUp - Stay Connected</p>
+                        </div>`
+
+            await sendEmail({
+                to: user.email,
+                subject,
+                body
+            })
+        }
+ 
+        return { message: "Notification Sent." }
     }
 )
 
@@ -127,5 +177,7 @@ export const functions = [
     syncUserCreation,
     syncUserUpdation,
     syncUserDeletion,
-    sendNewConnectionRequestRemainder
+    sendNewConnectionRequestRemainder,
+    deleteStory,
+    sendNotificationOfUnseenMessages
 ];

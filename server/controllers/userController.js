@@ -1,5 +1,6 @@
 import imagekit from "../config/imageKit.js";
 import Connection from "../model/Connection.js";
+import Post from "../model/Post.js";
 import User from "../model/User.js";
 import fs from "fs"
 
@@ -200,10 +201,16 @@ export const sendConnectionRequests = async (req, res) => {
 
 
         if (!connection) {
-            await Connection.create({
+            const newConnection =  await Connection.create({
                 from_user_id: userId,
                 to_user_id: id
             })
+
+            await inngest.send({
+                name: "app/connection-request",
+                data: { connectionId: newConnection._id }
+            })
+
             res.json({ success: true, message: "Connection request sent successfully" })
         }
         else if (connection && connection.status === "accepted") {
@@ -234,7 +241,7 @@ export const getUserConnections = async (req, res) => {
         }).populate("from_user_id").map(connection => { connection.from_user_id }))
 
 
-        return res.json({ success: true, connection , followers , following , pendingConnections }) 
+        return res.json({ success: true, connection, followers, following, pendingConnections })
 
     } catch (e) {
         return res.json({ success: false, message: error.message })
@@ -248,24 +255,43 @@ export const acceptUserConnection = async (req, res) => {
         const { userId } = req.auth();
         const { id } = req.body;
 
-        const connection = await Connection.find({from_user_id : id , to_user_id : userId})
-        if(!connection){
+        const connection = await Connection.find({ from_user_id: id, to_user_id: userId })
+        if (!connection) {
             return res.json({ success: false, message: "No connection found" })
         }
-        
+
         const user = await User.findById(userId)
         user.connections.push(id)
         await user.save()
-        
+
         const toUser = await User.findById(id)
         toUser.connections.push(userId)
         await toUser.save()
-        
+
         connection.status = "accepted"
         await connection.save()
-        
+
         return res.json({ success: false, message: "Connection accepted successfully" })
     } catch (e) {
+        return res.json({ success: false, message: error.message })
+    }
+}
+
+export const getUserProfile = async (req, res) => {
+    try {
+        const { profileId } = req.auth();
+
+        const profile = await User.findById(profileId)
+
+        if (!profile) {
+            return res.json({ success: false, message: "Profile not found" })
+        }
+
+        const posts = await Post.find({ user: profile }).populate("user")
+        return res.json({ success: true, posts })
+
+
+    } catch (error) {
         return res.json({ success: false, message: error.message })
     }
 }
