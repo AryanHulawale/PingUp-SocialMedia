@@ -8,9 +8,16 @@ import PostCard from '../components/PostCard'
 import { Link } from 'lucide-react'
 import moment from 'moment/moment'
 import ProfileModal from '../components/ProfileModal'
+import { useAuth } from '@clerk/clerk-react'
+import api from '../api/axios'
+import { toast } from "react-hot-toast"
+import { useSelector } from 'react-redux'
 
 const Profile = () => {
 
+  const currentUser = useSelector((state) => state.user.value)
+
+  const { getToken } = useAuth()
   const { profileId } = useParams()
   const [user, setUser] = useState(null)
   const [posts, setPosts] = useState([])
@@ -18,14 +25,35 @@ const Profile = () => {
   const [showEdit, setShowEdit] = useState(false)
 
 
-  const fetchUser = async () => {
-    setUser(dummyUserData)
-    setPosts(dummyPostsData)
+  const fetchUser = async (profileId) => {
+    const token = await getToken()
+
+    try {
+      const { data } = await api.post("/api/user/profiles", { profileId : profileId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      console.log("API Response:", data)
+      if (data.success) {
+        setUser(data.profile) 
+        setPosts(data.posts)
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
   useEffect(() => {
-    fetchUser()
-  }, []);
+    if (profileId) {
+      fetchUser(profileId)
+      console.log("User state updated:", user)
+    }
+    else {
+      fetchUser(currentUser._id)
+      console.log("User state updated:", user)
+    }
+  }, [profileId, currentUser]);
 
   return user ? (
     <div className='relative h-full overflow-y-scroll bg-gray-50 p-6 '>
@@ -68,9 +96,9 @@ const Profile = () => {
                     <>
                       {post.image_urls.map((image, index) => (
                         <a target='_blank' to={image} key={index}
-                        className='relative group'>
-                          <img src={image} key={index} 
-                          className='w-64 object-cover aspect-video' />
+                          className='relative group'>
+                          <img src={image} key={index}
+                            className='w-64 object-cover aspect-video' />
                           <p className='absolute bottom-0 right-0 text-xs p-1 px-3 
                           backdrop-blur-xl text-white opacity-0 group-hover:opacity-100 
                           transition duration-300'>Posted {moment(post.createdAt).fromNow()}</p>
@@ -85,7 +113,7 @@ const Profile = () => {
         </div>
       </div>
       {
-        showEdit && <ProfileModal setShowEdit={setShowEdit}/>
+        showEdit && <ProfileModal setShowEdit={setShowEdit} />
       }
     </div>
   ) : (<Loading />)

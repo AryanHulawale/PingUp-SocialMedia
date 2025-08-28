@@ -128,15 +128,23 @@ const deleteStory = inngest.createFunction(
     { id: "delete-story" },
     { event: "app/story.delete" },
     async ({ event, step }) => {
-        const { storyId } = event.data
-        last24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        await step.sleepUntil("wait-for-24-hours", last24Hours)
-        await step.run("story-delete", async () => {
-            await Story.findByIdAndDelete(storyId)
-            return { message: "Story deleted" }
-        })
+        const { storyId } = event.data;
+
+        // schedule deletion exactly 24 hours later
+        const deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await step.sleepUntil("wait-for-24-hours", deleteAt);
+
+        return await step.run("story-delete", async () => {
+            const deleted = await Story.findByIdAndDelete(storyId);
+            if (!deleted) {
+                return { message: "Story already deleted or not found" };
+            }
+            return { message: "Story deleted successfully" };
+        });
     }
-)
+);
+
 
 const sendNotificationOfUnseenMessages = inngest.createFunction(
     { id: "send-unseen-message-notification" },

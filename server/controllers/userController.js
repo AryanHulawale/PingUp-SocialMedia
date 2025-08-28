@@ -1,8 +1,10 @@
+import { connections } from "mongoose";
 import imagekit from "../config/imageKit.js";
 import Connection from "../model/Connection.js";
 import Post from "../model/Post.js";
 import User from "../model/User.js";
 import fs from "fs"
+import { inngest } from "../innjest/index.js";
 
 
 export const getUserData = async (req, res) => {
@@ -173,57 +175,55 @@ export const unFollowUsers = async (req, res) => {
     }
 }
 
-
 export const sendConnectionRequests = async (req, res) => {
     try {
-
         const { userId } = req.auth();
-        const { id } = req.body
-
-        // check if the user has sent more than 20 request in 24 hours
-        const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        const connectionRequest = await Connection.find({
+        const { id } = req.body;
+ 
+        // Limit to 20 requests in 24 hours
+        const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentRequests = await Connection.find({
             from_user_id: userId,
             createdAt: { $gt: last24Hours }
-        })
-        if (connectionRequest.length >= 20) {
-            return res.json({ success: false, message: "You have sent more than 20 connection request in last 24 hours" })
+        });
+        if (recentRequests.length >= 20) {
+            return res.json({ success: false, message: "You have sent more than 20 connection requests in the last 24 hours" });
         }
 
-        // check if user is already connected
-        const connection = await Connection.find({
+        // Check if a connection already exists
+        const existingConnection = await Connection.findOne({
             $or: [
                 { from_user_id: userId, to_user_id: id },
-                { from_user_id: id, to_user_id: userId },
-
+                { from_user_id: id, to_user_id: userId }
             ]
-        })
+        });
 
-
-        if (!connection) {
-            const newConnection =  await Connection.create({
-                from_user_id: userId,
-                to_user_id: id
-            })
-
-            await inngest.send({
-                name: "app/connection-request",
-                data: { connectionId: newConnection._id }
-            })
-
-            res.json({ success: true, message: "Connection request sent successfully" })
+        if (existingConnection) {
+            if (existingConnection.status === "accepted") {
+                return res.json({ success: false, message: "You are already connected with this user" });
+            } else {
+                return res.json({ success: false, message: "Connection request already pending" });
+            }
         }
-        else if (connection && connection.status === "accepted") {
-            res.json({ success: false, message: "You are already connected with this user" })
-        }
-        res.json({ success: false, message: "Connection request pending..." })
 
+        // Create a new connection request
+        const newConnection = await Connection.create({
+            from_user_id: userId,
+            to_user_id: id,
+            status: "pending"
+        });
 
+        await inngest.send({
+            name: "app/connection-request",
+            data: { connectionId: newConnection._id }
+        });
 
-    } catch (e) {
-        return res.json({ success: false, message: error.message })
+        return res.json({ success: true, message: "Connection request sent successfully" });
+
+    } catch (error) {
+        return res.json({ success: false, message: error.message });
     }
-}
+};
 
 
 export const getUserConnections = async (req, res) => {
@@ -231,19 +231,21 @@ export const getUserConnections = async (req, res) => {
         const { userId } = req.auth();
         const user = await User.findById(userId).populate("connections followers following")
 
-        const connection = user.connections
+        const connections = user.connections
         const followers = user.followers
         const following = user.following
 
-        const pendingConnections = (await Connection.find({
+        const pendingConnectionsRaw = await Connection.find({
             to_user_id: userId,
             status: "pending"
-        }).populate("from_user_id").map(connection => { connection.from_user_id }))
+        }).populate("from_user_id");
+
+        const pendingConnections = pendingConnectionsRaw.map(conn => conn.from_user_id);
 
 
-        return res.json({ success: true, connection, followers, following, pendingConnections })
+        return res.json({ success: true, connections, followers, following, pendingConnections })
 
-    } catch (e) {
+    } catch (error) {
         return res.json({ success: false, message: error.message })
     }
 }
@@ -255,31 +257,34 @@ export const acceptUserConnection = async (req, res) => {
         const { userId } = req.auth();
         const { id } = req.body;
 
-        const connection = await Connection.find({ from_user_id: id, to_user_id: userId })
+        const connection = await Connection.findOne({ from_user_id: id, to_user_id: userId })
         if (!connection) {
             return res.json({ success: false, message: "No connection found" })
         }
 
-        const user = await User.findById(userId)
-        user.connections.push(id)
-        await user.save()
+        const user = await User.findById(userId);
+        const toUser = await User.findById(id);
 
-        const toUser = await User.findById(id)
-        toUser.connections.push(userId)
-        await toUser.save()
+        if (!user.connections.includes(id)) user.connections.push(id);
+        if (!toUser.connections.includes(userId)) toUser.connections.push(userId);
 
-        connection.status = "accepted"
-        await connection.save()
+        await user.save();
+        await toUser.save();
+
+        // Mark connection as accepted
+        connection.status = "accepted";
+        await connection.save();
+
 
         return res.json({ success: false, message: "Connection accepted successfully" })
-    } catch (e) {
+    } catch (error) {
         return res.json({ success: false, message: error.message })
     }
 }
 
 export const getUserProfile = async (req, res) => {
     try {
-        const { profileId } = req.auth();
+        const { profileId } = req.body;
 
         const profile = await User.findById(profileId)
 
@@ -288,7 +293,7 @@ export const getUserProfile = async (req, res) => {
         }
 
         const posts = await Post.find({ user: profile }).populate("user")
-        return res.json({ success: true, posts })
+        return res.json({ success: true, profile, posts })
 
 
     } catch (error) {

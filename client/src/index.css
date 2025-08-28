@@ -7,7 +7,7 @@
     caret-color: transparent;
     user-select: none;
 } 
-textarea{
+textarea , input{
     caret-color: black;
     user-select: all;
 }

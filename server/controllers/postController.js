@@ -7,9 +7,9 @@ export const addPosts = async (req, res) => {
     try {
 
         const { userId } = req.auth();
-        const { content, post_type } = req.body
+        const { content, post_type } = req.body || {}
 
-        let images = req.files
+        let images = req.files || []
 
         let image_urls = []
         if (images.length) {
@@ -43,7 +43,8 @@ export const addPosts = async (req, res) => {
             content,
             image_urls,
             post_type
-        })
+        });
+
 
         res.json({ success: true, message: "Post created successfully" })
 
@@ -55,16 +56,41 @@ export const addPosts = async (req, res) => {
 // Get Post
 export const getFeedPosts = async (req, res) => {
     try {
-
         const { userId } = req.auth();
-        const user = await User.findById(userId)
+        const currentUser = await User.findById(userId);
 
-        const userIds = [userId, ...user.connections, user.following]
+        const connections = Array.isArray(currentUser.connections) ? currentUser.connections : [];
+        const following = Array.isArray(currentUser.following) ? currentUser.following : [];
 
-        const posts = await Post.find({ user: { $in: userIds } }).populate("user").sort({ created_at: -1 })
+        const userIds = [userId, ...connections, ...following];
 
+        
+        const posts = await Post.find({ user: { $in: userIds } }).sort({ createdAt: -1 });
 
-        res.json({ success: true, posts })
+       
+        const authorIds = [...new Set(posts.map(p => p.user))];
+
+        const authors = await User.find({ _id: { $in: authorIds } });
+
+      
+        const authorsMap = Object.fromEntries(authors.map(a => [a._id.toString(), a]));
+
+        // Map posts with proper user details
+        const postsWithUser = posts.map(post => {
+            const author = authorsMap[post.user.toString()];
+            return {
+                ...post.toObject(),
+                user: {
+                    _id: post.user,
+                    full_name: author?.full_name || "Unknown User",
+                    username: author?.username || "username",
+                    profile_picture: author?.profile_picture || "/default-avatar.png"
+                }
+            };
+        });
+
+        res.json({ success: true, posts: postsWithUser });
+
 
     } catch (error) {
         res.json({ success: false, message: error.message })

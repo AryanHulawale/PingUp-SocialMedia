@@ -1,21 +1,96 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { dummyMessagesData, dummyUserData } from '../assets/assets'
 import { ImageIcon, SendHorizonal } from 'lucide-react';
+import { useDispatch, useSelector } from "react-redux"
+import { useParams } from "react-router-dom"
+import { useAuth } from "@clerk/clerk-react"
+import api from '../api/axios';
+import { addMessages, fetchMessages, resetMessages } from '../features/messages/messagesSlice';
+import { } from "react-hot-toast"
 
 const ChatBot = () => {
-  const messages = dummyMessagesData;
+
+  const { messages } = useSelector((state) => state.messages)
+  const connections = useSelector((state) => state.connections.connections)
+  const { userId } = useParams()
+  const { getToken } = useAuth()
+  const dispatch = useDispatch()
+
+
   const [text, setText] = useState("")
   const [image, setImage] = useState(null)
-  const [user, setUser] = useState(dummyUserData)
+  const [user, setUser] = useState(null)
 
   const messageEndRef = useRef(null)
 
-  const sendMessage = async () => {
+  const fetchUserMessages = async () => {
+    try {
+      const token = await getToken();
+      // console.log("Got token:", token);
 
+      const result = await dispatch(fetchMessages({ token, userId }));
+      console.log("Dispatch result:", result);
+
+
+    } catch (error) {
+      console.error("fetchUserMessages error:", error);
+      toast.error(error?.message || "Unknown error");
+    }
   }
+
+  const sendMessage = async () => {
+    try {
+      if (!image && !text) return
+
+
+      const formData = new FormData()
+      formData.append("to_user_id", userId)
+      formData.append("text", text)
+      image && formData.append("image", image)
+
+      const token = await getToken();
+
+      const { data } = await api.post("/api/message/send", formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (data.success) {
+        setText("")
+        setImage(null)
+        // console.log("message sent")
+        dispatch(addMessages(data.message))
+        // console.log("message added")
+      }
+      else {
+        throw new Error(data.message)
+      }
+
+    } catch (error) {
+      console.log(error.message)
+      toast.error(error.message)
+    }
+  }
+
+  useEffect(() => {
+    // console.log("useEffect fired with userId:", userId);
+    fetchUserMessages()
+
+    return () => {
+      dispatch(resetMessages()); // clear messages when switching chats
+    };
+  }, [userId])
+
+  useEffect(() => {
+    if (connections.length > 0) {
+      const user = connections.find(connection => connection._id === userId)
+      setUser(user)
+    }
+  }, [userId, connections]);
+
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
 
   return user && (
     <div className='flex flex-col h-screen'>
@@ -30,7 +105,8 @@ const ChatBot = () => {
       <div className='p-5 md:px-10  h-full overflow-y-scroll'>
         <div className='space-y-4 max-w-4xl mx-auto'>
           {
-            messages.toSorted((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            [...messages]
+              .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
               .map((message, index) => (
                 <div key={index} className={`flex flex-col ${message.to_user_id !== user._id
                   ? "items-start" : "items-end"}`}>
@@ -56,7 +132,7 @@ const ChatBot = () => {
           <input type="text" placeholder='Type a message... '
             className='flex-1 outline-none text-slate-700'
             onKeyDown={e => e.key === "Enter" && sendMessage()}
-            onChange={() => setText(e.target.value)} value={text} />
+            onChange={(e) => setText(e.target.value)} value={text} />
 
           <label htmlFor="image">
             {
@@ -67,9 +143,9 @@ const ChatBot = () => {
             <input type="file" id='image' accept='image/*' hidden
               onChange={(e) => setImage(e.target.files[0])} />
           </label>
-          <button className='bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-700 to hover:to-purple-800
+          <button onClick={() => sendMessage()} className='bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-700 to hover:to-purple-800
           active:scale-95  p-2 cursor-pointer text-white rounded-full'>
-            <SendHorizonal size={18}/>
+            <SendHorizonal size={18} />
           </button>
         </div>
       </div>

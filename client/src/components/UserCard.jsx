@@ -1,16 +1,54 @@
 import React from 'react'
 import { dummyUserData } from '../assets/assets'
 import { MapPin, MessagesSquare, Plus, UserPlus } from 'lucide-react';
+import { useDispatch, useSelector } from "react-redux"
+import { useAuth } from "@clerk/clerk-react"
+import api from '../api/axios';
+import toast, { } from "react-hot-toast"
+import { fetchUser } from '../features/users/userSlice';
+import { useNavigate } from "react-router-dom";
 
 const UserCard = ({ user }) => {
 
-    const currentUser = dummyUserData;
+    const currentUser = useSelector((state) => state.user.value);;
+
+    const dispatch = useDispatch()
+    const { getToken } = useAuth()
+    const navigate = useNavigate()
 
     const handleFollow = async () => {
-
+        try {
+            const { data } = await api.post("/api/user/follow", { id: user._id }, {
+                headers: { Authorization: `Bearer ${await getToken()}` }
+            })
+            if (data.success) {
+                toast.success(data.message)
+                dispatch(fetchUser(await getToken()))
+            } else {
+                toast(data.message)
+            }
+        } catch (error) {
+            toast.error(data.message)
+        }
     }
     const handleConnectionRequest = async () => {
 
+        if(currentUser.connections.includes(user._id)){
+            return navigate("/message/" + user._id)
+        }
+
+        try {
+            const { data } = await api.post("/api/user/connect", { id: user._id }, {
+                headers: { Authorization: `Bearer ${await getToken()}` }
+            })
+            if (data.success) {
+                toast.success(data.message)
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(data.message)
+        }
     }
 
     return (
@@ -48,7 +86,7 @@ const UserCard = ({ user }) => {
                     {currentUser?.following.includes(user._id) ? "Following" : "Follow"}
                 </button>
                 {/* Connection request and message button */}
-                <button onClick={ handleConnectionRequest}
+                <button onClick={handleConnectionRequest}
                     className='w-16 flex justify-center items-center border text-slate-500
                 group rounded-md cursor-pointer active:scale-95 transition'>
                     {

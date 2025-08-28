@@ -1,18 +1,22 @@
 import React, { useState } from 'react'
 import { data, useNavigate } from 'react-router-dom'
 import { Users, UserPlus, UserCheck, UserRoundPen, MessageSquare, User } from "lucide-react"
-import {
-  dummyConnectionsData as connections,
-  dummyFollowersData as followers,
-  dummyFollowingData as following,
-  dummyPendingConnectionsData as pendingConnections
-} from "../assets/assets.js"
+
+import { useDispatch, useSelector } from "react-redux"
+import { useAuth } from '@clerk/clerk-react'
+import { useEffect } from 'react'
+import { fetchConnections } from '../features/connections/connectionsSlice'
+import toast from 'react-hot-toast'
+import api from '../api/axios'
 
 const Connections = () => {
+  const { getToken } = useAuth()
+  const dispatch = useDispatch()
 
   const navigate = useNavigate()
   const [currentTab, setCurrentTab] = useState("Followers")
 
+  const { connections, pendingConnections, followers, following } = useSelector((state) => state.connections)
 
   const dataArray = [
     { label: "Followers", value: followers, icon: User },
@@ -20,6 +24,58 @@ const Connections = () => {
     { label: "Pending", value: pendingConnections, icon: UserRoundPen },
     { label: "Connections", value: connections, icon: UserPlus },
   ]
+
+  const handleUnfollow = async (userId) => {
+    try {
+
+      const token = await getToken()
+      const { data } = await api.post("/api/user/unfollow", { id: userId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (data.success) {
+        toast.success(data.message)
+      }
+      else {
+        toast.success(data.message)
+        console.log(data.message)
+      }
+      await dispatch(fetchConnections(token))
+
+    } catch (error) {
+      console.log(error.message)
+      toast.error(error.message)
+    }
+  }
+
+  const acceptConnection = async (userId) => {
+    try {
+
+      const token = await getToken()
+      const { data } = await api.post("/api/user/accept", { id: userId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (data.success) {
+        toast.success(data.message)
+        await dispatch(fetchConnections(token))
+      }
+      else {
+        toast.success(data.message)
+      }
+
+    } catch (error) {
+      console.log(error.message)
+      toast.error(error.message)
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await getToken()
+      await dispatch(fetchConnections(token))
+    }
+    fetchData()
+  }, [getToken, dispatch])
+
 
   return (
     <div className='min-h-screen bg-slate-50 relative'>
@@ -70,7 +126,7 @@ const Connections = () => {
                 <div className='flex-1'>
                   <p className='font-medium text-slate-700'>{user.full_name}</p>
                   <p className='text-slate-500'>@{user.username}</p>
-                  <p className='text-sm text-slate-600'>{user.bio.slice(0,30)}...</p>
+                  <p className='text-sm text-slate-600'>{user.bio.slice(0, 30)}...</p>
                   <div className='flex mx-sm:flex-col gap-2 mt-4'>
                     {
                       <button onClick={() => { navigate(`/profile/${user._id}`) }}
@@ -80,25 +136,25 @@ const Connections = () => {
                     }
                     {
                       currentTab === "Following" && (
-                        <button className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200  text-black active:scale-95  transition cursor-pointer'>
+                        <button onClick={() => handleUnfollow(user._id)} className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200  text-black active:scale-95  transition cursor-pointer'>
                           UnFollow
                         </button>
                       )
                     }
                     {
                       currentTab === "Pending" && (
-                        <button className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200  text-black active:scale-95  transition cursor-pointer'>
+                        <button onClick={() => acceptConnection(user._id)} className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200  text-black active:scale-95  transition cursor-pointer'>
                           Accept
                         </button>
                       )
                     }
                     {
                       currentTab === "Connections" && (
-                        <button onClick={()=> navigate(`/messages/${user._id}`)}
-                        className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200
+                        <button onClick={() => navigate(`/message/${user._id}`)}
+                          className='w-full text-sm p-2 rounded bg-slate-100 hover:bg-slate-200
                         text-slate-800 active:scale-95  transition cursor-pointer flex items-center
                         justify-center gap-1'>
-                          <MessageSquare className='w-4 h-4'/>
+                          <MessageSquare className='w-4 h-4' />
                           Message
                         </button>
                       )

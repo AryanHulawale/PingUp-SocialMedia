@@ -22,7 +22,7 @@ userRouter.post("/connect", protect, sendConnectionRequests)
 userRouter.post("/accept", protect, acceptUserConnection)
 userRouter.get("/connections", protect, getUserConnections) 
 
-userRouter.post("/profile",getUserProfile)
+userRouter.post("/profiles",getUserProfile)
 
 userRouter.get("/recent-messages",protect , getRecentMessages)
 

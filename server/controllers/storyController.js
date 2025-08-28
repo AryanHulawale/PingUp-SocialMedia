@@ -36,7 +36,7 @@ export const addUserStory = async (req, res) => {
             data : {storyId : story._id}
         })
 
-        res.json({ success: true })
+        res.json({ success: true , message: "Story created successfully" })
 
     } catch (error) {
         console.log(error)

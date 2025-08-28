@@ -1,26 +1,52 @@
-import React, { use, useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import { dummyConnectionsData } from '../assets/assets'
 import { Loader, Search } from 'lucide-react'
 import UserCard from '../components/UserCard'
 import Loading from '../components/Loading'
+import api from '../api/axios'
+import { useAuth } from "@clerk/clerk-react"
+import toast, { } from "react-hot-toast"
+import { useDispatch } from 'react-redux'
+import { fetchUser } from '../features/users/userSlice'
 
 const Discover = () => {
 
+  const dispatch = useDispatch()
+
   const [input, setInput] = useState("")
-  const [users, setUsers] = useState(dummyConnectionsData)
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
+
+  const { getToken } = useAuth()
 
 
   const handleInput = async (e) => {
     if (e.key === "Enter") {
-      setLoading(true)
-      setUsers([])
-      setTimeout(() => {
-        setUsers(dummyConnectionsData)
+      try {
+        setUsers([])
+        setLoading(true)
+        const { data } = await api.post("/api/user/discover", { input }, {
+          headers: { Authorization: `Bearer ${await getToken()}` }
+        })
+        data.success ? setUsers(data.user) : toast(data.message)
         setLoading(false)
-      }, 100);
+        setInput("")
+      } catch (error) {
+        toast.error(error.message)
+      }
+      setLoading(false)
     }
   }
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await getToken()
+      dispatch(fetchUser(token))
+    }
+    fetchData()
+  }, [])
+
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
@@ -40,7 +66,7 @@ const Discover = () => {
               <input type="text" placeholder='Search people by name, username, bio or location...'
                 className='pl-10 sm:pl-12 py-2 w-full border border-gray-300 rounded-md max-sm:text-sm'
                 onChange={(e) => setInput(e.target.value)}
-                value={ input } onKeyUp={handleInput} />
+                value={input} onKeyUp={handleInput} />
             </div>
           </div>
         </div>
@@ -48,13 +74,13 @@ const Discover = () => {
         {/* Crads */}
         <div className='flex flex-wrap gap-6 '>
           {
-            users.map((user)=>(
-              <UserCard user={user} key={user._id}/>
+            users.map((user) => (
+              <UserCard user={user} key={user._id} />
             ))
           }
         </div>
         {
-          loading && <Loading height='60vh'/>
+          loading && <Loading height='60vh' />
         }
       </div>
     </div>

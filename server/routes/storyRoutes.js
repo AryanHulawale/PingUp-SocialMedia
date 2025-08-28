@@ -5,7 +5,7 @@ import { upload } from "../config/multer.js";
 
 const storyRouter = express.Router();
 
-storyRouter.post("/create", protect, upload.single(), addUserStory)
+storyRouter.post("/create", protect, upload.single("media"), addUserStory)
 storyRouter.get("/get", protect, getStories)
 
 export default storyRouter

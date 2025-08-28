@@ -1,18 +1,59 @@
 import React, { useState } from 'react'
 import Loading from '../components/Loading'
 import { dummyUserData } from '../assets/assets'
-import { Image, X } from 'lucide-react'
+import { Cone, Image, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useSelector } from "react-redux"
+import api from '../api/axios'
+import { useAuth } from "@clerk/clerk-react"
+import {useNavigate} from "react-router-dom"
 
 const CreatePost = () => {
+
+  const { getToken } = useAuth()
+  const navigate = new useNavigate()
 
   const [content, setContent] = useState("")
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(false)
 
-  const user = dummyUserData
+  const user = useSelector((state) => state.user.value);
 
   const handleSubmit = async () => {
+    if (!content && !images) {
+      toast.error("Please at least one image or text for post")
+    }
+    setLoading(true)
+
+    const post_type = content && images ? "text_with_image" : images ? "image" : "text"
+
+    try {
+
+      const fromData = new FormData();
+      fromData.append("content", content)
+      fromData.append("post_type", post_type)
+
+      images.map(image => {
+        fromData.append("images", image)
+      })
+
+      const token = await getToken()
+
+      const { data } = await api.post("/api/post/add", fromData, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (data.success) {
+        navigate("/")
+      } else {
+        console.log(data.message)
+        throw new Error(data.message)
+      }
+
+    } catch (error) {
+      console.log(error.message)
+      throw new Error(error.message)
+    }
 
   }
 
