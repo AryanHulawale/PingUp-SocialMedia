@@ -6,12 +6,12 @@ This project taught me a lot about full-stack development, debugging, and integr
 ---
 
 ## ✨ Features (Current)
-- 🔐 **Authentication & User Management** with Clerk  
-- 🖼️ **Image Upload & Optimization** using ImageKit  
-- 📨 **Event Handling & Workflows** powered by Inngest  
-- 👤 Create and manage user profiles  
-- 📝 Post content (text + images)  
-- 🗑️ Delete posts  
+- 📸 **Upload stories**
+- 📝 **Create and share posts**
+- 👥 **Follow and connect with other users**
+- 💬 **Send and receive messages**
+- 👤 **View and manage user profiles**
+- 🌍 **Discover and explore other people on the platform**
 
 ---
 
