@@ -23,7 +23,7 @@ const StoriesBar = () => {
                 headers: { Authorization: `Bearer ${token}` }
             })
             if (data.success) {
-                setStories(data.stories)
+                setStories([...data.stories].reverse())
             } else {
                 toast(data.messsage)
             }

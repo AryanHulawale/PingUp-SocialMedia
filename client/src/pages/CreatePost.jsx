@@ -11,7 +11,7 @@ import {useNavigate} from "react-router-dom"
 const CreatePost = () => {
 
   const { getToken } = useAuth()
-  const navigate = new useNavigate()
+  const navigate = useNavigate()
 
   const [content, setContent] = useState("")
   const [images, setImages] = useState([])
@@ -20,7 +20,7 @@ const CreatePost = () => {
   const user = useSelector((state) => state.user.value);
 
   const handleSubmit = async () => {
-    if (!content && !images) {
+    if (!content.trim() && images.length === 0) {
       toast.error("Please at least one image or text for post")
     }
     setLoading(true)
@@ -106,7 +106,7 @@ const CreatePost = () => {
             hover:text-gray-700 transition cursor-pointer'>
               <Image className='size-6' />
             </label>
-            <input type="file" id="images" accept='image/*' hidden multiple
+            <input type="file" id="images" accept='image/*' capture="environment" hidden multiple
               onChange={(e) =>
                 setImages((prev) => [...prev, ...Array.from(e.target.files)])
               }

@@ -140,7 +140,7 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
           <label className={` flex flex-1 items-center justify-center gap-2 p-2 rounded cursor-pointer
             ${mode === "media" ? " bg-white text-black" : "bg-zinc-800"}`}>
             <input onChange={handleMediaUpload}
-              type="file" accept='image/* ,video/*' className='hidden' />
+              type="file" accept='image/* ,video/*' capture="environment" className='hidden' />
             <Upload size={18} /> Photo/Video
           </label>
 

@@ -60,7 +60,7 @@ const ProfileModal = ({ setShowEdit }) => {
                                 className='block text-sm font-medium text-gray-700 mb-1'>
                                 Profile Picture
 
-                                <input type="file" accept='image/*' id='profile_picture'
+                                <input type="file" accept='image/*' capture="environment" id='profile_picture'
                                     className='w-full p-3 border border-gray-200 rounded-lg'
                                     onChange={(e) => setEditForm({ ...editForm, profile_picture: e.target.files[0] })} />
 
@@ -88,7 +88,7 @@ const ProfileModal = ({ setShowEdit }) => {
                                 className='block text-sm font-medium text-gray-700 mb-1'>
                                 Cover Photo
 
-                                <input hidden type="file" accept='image/*' id='cover_photo'
+                                <input hidden type="file" accept='image/*' capture="environment" id='cover_photo'
                                     className='w-full p-3 border border-gray-200 rounded-lg'
                                     onChange={(e) => setEditForm({ ...editForm, cover_photo: e.target.files[0] })} />
                                 <div className='group/cover relative'>
