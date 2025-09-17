@@ -60,7 +60,7 @@ This project taught me a lot about full-stack development, debugging, and integr
 
 ---
 
-**Key Learnings:**
+## Key Learnings:
 - Connecting frontend and backend in real-world applications  
 - Implementing secure authentication  
 - Efficient image optimization and media handling  
@@ -79,7 +79,7 @@ You can try the live demo here:
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/AryanHulawale/pingup.git
+git clone https://github.com/AryanHulawale/PingUp-SocialMedia.git
 cd pingup
 ```
 
