@@ -1,29 +1,56 @@
-# PingUp - Social Media Website 🚀
+# PingUp - Social Media Website
 
 PingUp is my very first **MERN stack project** – a social media website where users can connect, share, and interact.  
-This project taught me a lot about full-stack development, debugging, and integrating third-party services.  
+This project taught me a lot about full-stack development, debugging, and integrating third-party services.
 
 ---
 
-## ✨ Features (Current)
-- 📸 **Upload stories**
-- 📝 **Create and share posts**
-- 👥 **Follow and connect with other users**
-- 💬 **Send and receive messages**
-- 👤 **View and manage user profiles**
-- 🌍 **Discover and explore other people on the platform**
+## Features (Current)
+
+### 1. User Authentication & Profiles
+- Secure sign-up and login using Clerk authentication.  
+- Personalized user profiles with profile picture, bio, and activity overview.  
+- Ability to update and manage profile information.  
+
+### 2. Stories
+- Upload and share short-lived stories with images.  
+- Stories disappear after 24 hours, allowing for more casual and temporary updates.  
+
+### 3. Posts & Feed
+- Create posts with text and images.  
+- Posts appear on the home feed for followers.  
+- Ability to like and interact with other users’ posts (planned expansion for comments & sharing).  
+
+### 4. Follow & Connect
+- Follow/unfollow users to curate your personal feed.  
+- Build a network by connecting with friends and new people.  
+- Discover recommended users on the platform.  
+
+### 5. Messaging
+- Send and receive private messages with other users.  
+- Real-time chat experience (using backend integration).  
+- Chat history stored securely.  
+
+### 6. Explore & Discover
+- Explore tab to find new people, trending content, and suggested connections.  
+- Search functionality to quickly find users by name or username.  
+
+### 7. Profile Management
+- View your posts, stories, and activity on your profile.  
+- Edit profile details to personalize your account.  
+- View others’ profiles to explore their shared content.  
 
 ---
 
-## 🔧 Upcoming Features
-- 💬 **Comments on posts**  
-- 🔗 **Share functionality**  
-- 🎨 UI/UX improvements  
-- 🐞 Fixing some small bugs & performance tweaks  
+## Upcoming Features
+- **Comments on Posts:** Engage in discussions by commenting on friends’ posts.  
+- **Post Sharing:** Share posts across the platform or with friends directly.  
+- **Improved UI/UX:** Smoother navigation, modern UI upgrades, and responsive layouts.  
+- **Bug Fixes & Optimization:** Enhance performance and fix small issues for smoother use.  
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 - **Frontend:** React.js  
 - **Backend:** Node.js + Express.js  
 - **Database:** MongoDB  
@@ -33,21 +60,56 @@ This project taught me a lot about full-stack development, debugging, and integr
 
 ---
 
-## 📖 The Journey
-I followed **GreatStack’s tutorials on YouTube**, which guided me through building and scaling a full MERN app.  
-This project wasn’t easy – I went through late nights, countless bugs, and frustrating errors – but each fix taught me something valuable.  
-
-**Key Learnings**:
-- How frontend and backend connect in real-world projects  
+**Key Learnings:**
+- Connecting frontend and backend in real-world applications  
 - Implementing secure authentication  
-- Optimizing images and handling media efficiently  
-- Patience and consistency are just as important as coding skills  
+- Efficient image optimization and media handling  
+- The importance of patience and consistency in development  
 
 ---
 
-## 🚀 Getting Started (For Developers)
+## Demo
+You can try the live demo here:  
+[https://ping-up-liart.vercel.app/](https://ping-up-liart.vercel.app/)
 
-1. Clone the repo  
-   ```bash
-   git clone https://github.com/your-username/pingup.git
-   cd pingup
+---
+
+## Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/AryanHulawale/pingup.git
+cd pingup
+```
+
+---
+
+## Deployment
+
+To deploy this project run
+
+`1. For client
+```bash
+  npm run dev
+```
+
+
+`2. For server
+```bash
+  npm run server
+```
+
+---
+
+## Contributing
+
+Contributions are always welcome!
+
+See `contributing.md` for ways to get started.
+
+Please adhere to this project's `code of conduct`.
+
+---
+
+
