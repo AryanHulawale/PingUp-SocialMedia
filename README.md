@@ -85,6 +85,38 @@ cd pingup
 
 ---
 
+## Project Structure 
+
+```
+📦 PingUp
+├─ client # Frontend (React + Vite)
+│ ├─ public # Static assets
+│ ├─ src
+│ │ ├─ api # API service functions
+│ │ ├─ app # App-level setup (store, providers, etc.)
+│ │ ├─ assets # Images, icons, and static resources
+│ │ ├─ components # Reusable UI components
+│ │ ├─ features # Feature-based modules
+│ │ ├─ pages # Page-level components (routes)
+│ │ ├─ App.jsx # Root app component
+│ │ ├─ index.css # Global styles
+│ │ └─ main.jsx # Entry point
+│ └─ index.html # HTML template
+│
+├─ server # Backend (Node.js + Express)
+│ ├─ config # Configuration (DB, environment, etc.)
+│ ├─ controllers # Request handlers
+│ ├─ innjest # Testing / mock utilities
+│ ├─ middlewares # Express middlewares
+│ ├─ model # Database models
+│ ├─ routes # API routes
+│ └─ server.js # Server entry point
+│
+└─ README.md # Project documentation
+```
+
+---
+
 ## Deployment
 
 To deploy this project run
