@@ -8,11 +8,11 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Aryan Hulawale",
   "license": "ISC",
-  "description": "",
+  "description": "PingUp Backend Service",
   "dependencies": {
-    "@clerk/express": "^1.7.23",
+    "@clerk/express": "^2.0.6",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
